@@ -51,6 +51,7 @@ public class Application {
 	private BuildingBlock toBuildingBlock(final JavaClass javaClass, final BuildingBlockDescriptor buildingBlockDescriptor) {
 		return BuildingBlock.builder()
 				.name(buildingBlockDescriptor.name)
+				.module(moduleAssignment.getModuleNameFor(javaClass).orElse(null))
 				.javaClass(javaClass)
 				.build();
 	}
@@ -59,8 +60,8 @@ public class Application {
 
 		return buildingBlocks
 				.stream()
-				.filter(buildingBlock -> buildingBlock.name.equals(relationshipDescriptor.getTargetBuildingBlockName()))
-				.flatMap(buildingBlock -> relationshipDescriptor.getSourceSelector().apply(buildingBlock.javaClass)
+				.filter(buildingBlock -> buildingBlock.getName().equals(relationshipDescriptor.getTargetBuildingBlockName()))
+				.flatMap(buildingBlock -> relationshipDescriptor.getSourceSelector().apply(buildingBlock.getJavaClass())
 						.map(sourceJavaClass -> toRelationship(sourceJavaClass, buildingBlock, relationshipDescriptor)));
 
 	}
@@ -69,6 +70,7 @@ public class Application {
 		return Relationship.builder()
 				.name(relationshipDescriptor.getName())
 				.source(sourceJavaClass)
+				.sourceModule(moduleAssignment.getModuleNameFor(sourceJavaClass).orElse(null))
 				.targetBuildingBlock(targetBuildingBlock)
 				.build();
 	}

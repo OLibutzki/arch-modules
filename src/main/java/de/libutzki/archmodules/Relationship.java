@@ -1,27 +1,35 @@
 package de.libutzki.archmodules;
 
+import java.util.Optional;
+
 import javax.annotation.Nonnull;
 
 import com.tngtech.archunit.core.domain.JavaClass;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 @Builder
-@EqualsAndHashCode
+@Value
 public class Relationship {
 
 	@Nonnull
-	public String name;
+	private String name;
 
 	@Nonnull
-	public JavaClass source;
+	private JavaClass source;
+
+	private String sourceModule;
 
 	@Nonnull
-	public BuildingBlock targetBuildingBlock;
+	private BuildingBlock targetBuildingBlock;
+
+	public Optional<String> getSourceModule() {
+		return Optional.ofNullable(sourceModule);
+	}
 
 	@Override
 	public String toString() {
-		return source.getName() + " " + name + " " + targetBuildingBlock;
+		return source.getName() + " (" + getSourceModule().map(moduleName -> "module: " + moduleName).orElse("no module") + ") " + name + " " + targetBuildingBlock;
 	}
 }

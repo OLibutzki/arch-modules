@@ -1,5 +1,6 @@
 package de.libutzki.archmodules;
 
+import static com.tngtech.archunit.core.domain.properties.CanBeAnnotated.Predicates.annotatedWith;
 import static de.libutzki.archmodules.ArchDocs.buildingBlock;
 import static de.libutzki.archmodules.ArchDocs.relationship;
 
@@ -15,6 +16,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
 
 import de.libutzki.archmodules.sample.library.Event;
 import de.libutzki.archmodules.sample.library.EventListener;
+import de.libutzki.archmodules.sample.library.Module;
 
 public class ArchModulesTest {
 
@@ -22,18 +24,26 @@ public class ArchModulesTest {
 	void test() {
 
 		final JavaClasses javaClasses = new ClassFileImporter().importPackages("de.libutzki.archmodules.sample");
-		final MyModuleAssignment moduleAssignment = new MyModuleAssignment(javaClasses);
 
 		final Application application = Application.builder()
 				.javaClasses(javaClasses)
 				.buildingBlockDescriptor(buildingBlock("Event").definedBy(this::event))
 				.relationshipDescriptor(relationship("handles").to("Event").from(this::eventHandlers))
 				.relationshipDescriptor(relationship("emits").to("Event").from(this::eventEmitters))
-				.moduleAssignment(moduleAssignment)
+				.moduleAssignment(moduleAssignment(javaClasses))
 				.build();
 
 		application.buildingBlocks.forEach(System.out::println);
 		application.relationships.forEach(System.out::println);
+	}
+
+	private ModuleAssignment moduleAssignment(final JavaClasses javaClasses) {
+		return javaClass -> javaClasses.that(annotatedWith(Module.class))
+				.stream()
+				.filter(moduleDescriptor -> moduleDescriptor.getPackage().getAllClasses().contains(javaClass))
+				.findFirst()
+				.map(moduleDescriptor -> moduleDescriptor.getAnnotationOfType(Module.class).value());
+
 	}
 
 	private boolean event(final JavaClass javaClass) {
