@@ -10,18 +10,18 @@ import com.tngtech.archunit.core.domain.JavaClasses;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
-import lombok.Value;
 
-@Value
 public class Application {
 
-	private final Set<BuildingBlock> buildingBlocks;
-	private final ModuleAssignment moduleAssignment;
+	public final Set<BuildingBlock> buildingBlocks;
+	public final Set<Relationship> relationships;
+	public final ModuleAssignment moduleAssignment;
 
 	@Builder
 	private Application(
 			final @NonNull JavaClasses javaClasses,
 			final @Singular Set<BuildingBlockDescriptor> buildingBlockDescriptors,
+			final @Singular Set<RelationshipDescriptor> relationshipDescriptors,
 			final ModuleAssignment moduleAssignment) {
 		if (moduleAssignment != null) {
 			this.moduleAssignment = moduleAssignment;
@@ -33,31 +33,43 @@ public class Application {
 				.stream()
 				.flatMap(buildingBlockDescriptor -> toBuildingBlocks(buildingBlockDescriptor, javaClasses))
 				.collect(Collectors.toSet());
+
+		relationships = relationshipDescriptors
+				.stream()
+				.flatMap(buildingBlockDescriptor -> toRelationships(buildingBlockDescriptor))
+				.collect(Collectors.toSet());
+
 	}
 
 	private Stream<BuildingBlock> toBuildingBlocks(final BuildingBlockDescriptor buildingBlockDescriptor, final JavaClasses javaClasses) {
-		return buildingBlockDescriptor.filter(javaClasses.stream())
+		return javaClasses
+				.stream()
+				.filter(buildingBlockDescriptor.selector)
 				.map(javaClass -> toBuildingBlock(javaClass, buildingBlockDescriptor));
 	}
 
 	private BuildingBlock toBuildingBlock(final JavaClass javaClass, final BuildingBlockDescriptor buildingBlockDescriptor) {
 		return BuildingBlock.builder()
-				.name(buildingBlockDescriptor.name())
+				.name(buildingBlockDescriptor.name)
 				.javaClass(javaClass)
-				.relationships(buildingBlockDescriptor.relationshipDescriptorsFor(javaClass)
-						.map(relationshipDescriptor -> toRelationship(relationshipDescriptor, javaClass))
-						.collect(Collectors.toSet()))
 				.build();
 	}
 
-	private Relationship toRelationship(final RelationshipDescriptor relationshipDescriptor, final JavaClass javaClass) {
+	private Stream<Relationship> toRelationships(final RelationshipDescriptor relationshipDescriptor) {
+
+		return buildingBlocks
+				.stream()
+				.filter(buildingBlock -> buildingBlock.name.equals(relationshipDescriptor.getTargetBuildingBlockName()))
+				.flatMap(buildingBlock -> relationshipDescriptor.getSourceSelector().apply(buildingBlock.javaClass)
+						.map(sourceJavaClass -> toRelationship(sourceJavaClass, buildingBlock, relationshipDescriptor)));
+
+	}
+
+	private Relationship toRelationship(final JavaClass sourceJavaClass, final BuildingBlock targetBuildingBlock, final RelationshipDescriptor relationshipDescriptor) {
 		return Relationship.builder()
-				.name(relationshipDescriptor.name())
-				.javaClasses(relationshipDescriptor
-						.relationshipClassesOf(javaClass)
-						.collect(Collectors.toSet()))
+				.name(relationshipDescriptor.getName())
+				.source(sourceJavaClass)
+				.targetBuildingBlock(targetBuildingBlock)
 				.build();
-
 	}
-
 }

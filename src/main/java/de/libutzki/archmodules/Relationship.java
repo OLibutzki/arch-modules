@@ -1,22 +1,27 @@
 package de.libutzki.archmodules;
 
-import java.util.Set;
-
 import javax.annotation.Nonnull;
 
 import com.tngtech.archunit.core.domain.JavaClass;
 
 import lombok.Builder;
-import lombok.Singular;
-import lombok.Value;
+import lombok.EqualsAndHashCode;
 
 @Builder
-@Value
+@EqualsAndHashCode
 public class Relationship {
 
 	@Nonnull
-	String name;
+	public String name;
 
-	@Singular
-	Set<JavaClass> javaClasses;
+	@Nonnull
+	public JavaClass source;
+
+	@Nonnull
+	public BuildingBlock targetBuildingBlock;
+
+	@Override
+	public String toString() {
+		return source.getName() + " " + name + " " + targetBuildingBlock;
+	}
 }
