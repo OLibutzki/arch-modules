@@ -34,7 +34,7 @@ public class ArchModulesTest {
 				.moduleAssignment(moduleAssignment(javaClasses))
 				.build();
 
-		application.archDocClasses.stream().filter(BuildingBlock.class::isInstance).forEach(System.out::println);
+		application.buildingBlocks.forEach(System.out::println);
 		application.relationships.forEach(System.out::println);
 	}
 

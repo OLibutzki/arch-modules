@@ -8,12 +8,10 @@ import java.util.Set;
 import com.tngtech.archunit.core.domain.JavaClass;
 
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 public final class BuildingBlock extends ArchDocClass {
 
-	@ToString.Include
 	private final BuildingBlockType type;
 
 	@EqualsAndHashCode.Exclude

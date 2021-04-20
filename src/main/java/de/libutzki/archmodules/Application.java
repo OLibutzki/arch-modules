@@ -1,6 +1,7 @@
 package de.libutzki.archmodules;
 
-import java.util.HashSet;
+import static java.util.stream.Collectors.toSet;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,7 +18,7 @@ import lombok.Singular;
 
 public class Application {
 
-	public final Set<ArchDocClass> archDocClasses;
+	public final Set<BuildingBlock> buildingBlocks;
 	public final Set<Relationship> relationships;
 	public final ModuleAssignment moduleAssignment;
 
@@ -48,12 +49,16 @@ public class Application {
 					.forEach(archDocClass -> archDocClass.assignModule(module));
 		});
 
-		archDocClasses = new HashSet<>(archDocClassLookup.values());
+		buildingBlocks = archDocClassLookup.values()
+				.stream()
+				.filter(BuildingBlock.class::isInstance)
+				.map(BuildingBlock.class::cast)
+				.collect(toSet());
 
 		relationships = relationshipDescriptors
 				.stream()
 				.flatMap(buildingBlockDescriptor -> toRelationships(buildingBlockDescriptor, archDocClassLookup))
-				.collect(Collectors.toSet());
+				.collect(toSet());
 
 	}
 
@@ -82,10 +87,8 @@ public class Application {
 
 	private Stream<Relationship> toRelationships(final RelationshipDescriptor relationshipDescriptor, final Map<JavaClass, ArchDocClass> archDocClassLookup) {
 
-		return archDocClasses
+		return buildingBlocks
 				.stream()
-				.filter(BuildingBlock.class::isInstance)
-				.map(BuildingBlock.class::cast)
 				.filter(buildingBlock -> buildingBlock.getType().equals(relationshipDescriptor.getTargetBuildingBlockType()))
 				.flatMap(buildingBlock -> relationshipDescriptor.getSourceSelector().apply(buildingBlock.getJavaClass())
 						.map(sourceJavaClass -> toRelationship(archDocClassLookup.get(sourceJavaClass), buildingBlock, relationshipDescriptor)));

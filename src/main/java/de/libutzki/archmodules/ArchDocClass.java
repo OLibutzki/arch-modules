@@ -9,12 +9,9 @@ import java.util.Set;
 import com.tngtech.archunit.core.domain.JavaClass;
 
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 public abstract class ArchDocClass {
-	@ToString.Include
 	private final JavaClass javaClass;
-	@ToString.Include
 	private Optional<Module> module = Optional.empty();
 
 	@EqualsAndHashCode.Exclude
