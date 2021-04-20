@@ -29,8 +29,8 @@ public class ArchModulesTest {
 		final Application application = Application.builder()
 				.javaClasses(javaClasses)
 				.buildingBlockDescriptor(buildingBlock(event).definedBy(this::event))
-				.relationshipDescriptor(relationship(RelationshipRole.of("handles")).to(event).from(this::eventHandlers))
-				.relationshipDescriptor(relationship(RelationshipRole.of("emits")).to(event).from(this::eventEmitters))
+				.relationshipDescriptor(relationship(RelationshipIdentifier.of("handles", event)).from(this::eventHandlers))
+				.relationshipDescriptor(relationship(RelationshipIdentifier.of("emits", event)).from(this::eventEmitters))
 				.moduleAssignment(moduleAssignment(javaClasses))
 				.build();
 

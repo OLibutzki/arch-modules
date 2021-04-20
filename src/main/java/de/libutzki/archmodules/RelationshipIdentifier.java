@@ -5,6 +5,8 @@ import lombok.Value;
 
 @RequiredArgsConstructor(staticName = "of")
 @Value
-public class RelationshipRole {
-	private final String name;
+public class RelationshipIdentifier {
+
+	private final String role;
+	private final BuildingBlockType buildingBlockType;
 }

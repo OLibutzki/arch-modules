@@ -9,7 +9,7 @@ public final class ArchDocs {
 		return new BuildingBlockDescriptor.BuildingBlockDescriptorWithType(type);
 	}
 
-	static final RelationshipDescriptor.RelationshipDescriptorWithRole relationship(final RelationshipRole role) {
-		return new RelationshipDescriptor.RelationshipDescriptorWithRole(role);
+	static final RelationshipDescriptor.RelationshipDescriptorWithIdentifier relationship(final RelationshipIdentifier identifier) {
+		return new RelationshipDescriptor.RelationshipDescriptorWithIdentifier(identifier);
 	}
 }

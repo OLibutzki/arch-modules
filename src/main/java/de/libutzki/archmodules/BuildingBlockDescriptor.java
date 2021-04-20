@@ -4,13 +4,15 @@ import java.util.function.Predicate;
 
 import com.tngtech.archunit.core.domain.JavaClass;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
+@Getter(value = AccessLevel.PACKAGE)
 public final class BuildingBlockDescriptor {
-
-	public final BuildingBlockType type;
-	public final Predicate<? super JavaClass> selector;
+	private final BuildingBlockType type;
+	private final Predicate<? super JavaClass> selector;
 
 	static class BuildingBlockDescriptorWithType {
 
@@ -25,4 +27,8 @@ public final class BuildingBlockDescriptor {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return type.toString();
+	}
 }

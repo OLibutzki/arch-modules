@@ -1,9 +1,12 @@
 package de.libutzki.archmodules;
 
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,6 +35,20 @@ public class Application {
 			this.moduleAssignment = moduleAssignment;
 		} else {
 			this.moduleAssignment = ModuleAssignment.NoOpModuleAssignment;
+		}
+
+		final Set<BuildingBlockType> duplicateBuildingBlockTypes = buildingBlockDescriptors
+				.stream()
+				.collect(Collectors.groupingBy(BuildingBlockDescriptor::getType, Collectors.counting()))
+				.entrySet()
+				.stream()
+				.filter(count -> count.getValue() > 1)
+				.map(Map.Entry::getKey)
+				.collect(toSet());
+
+		if (!duplicateBuildingBlockTypes.isEmpty()) {
+			throw new IllegalArgumentException(
+					"For the following BuildingBlockTypes multiple descriptors have been registered: " + buildingBlockDescriptors.stream().map(Object::toString).collect(Collectors.joining(", ")));
 		}
 
 		final Map<JavaClass, ArchDocClass> archDocClassLookup = toArchDocClasses(javaClasses, buildingBlockDescriptors)
@@ -71,14 +88,23 @@ public class Application {
 	private ArchDocClass toArchDocClass(final JavaClass javaClass, final Set<BuildingBlockDescriptor> buildingBlockDescriptors) {
 		return buildingBlockDescriptors
 				.stream()
-				.filter(buildingBlockDescriptor -> buildingBlockDescriptor.selector.test(javaClass))
-				.findFirst()
+				.filter(buildingBlockDescriptor -> buildingBlockDescriptor.getSelector().test(javaClass))
+				.collect(collectingAndThen(toList(), descriptors -> {
+					if (descriptors.size() == 1) {
+						return Optional.of(descriptors.get(0));
+					}
+					if (descriptors.isEmpty()) {
+						return Optional.<BuildingBlockDescriptor>empty();
+					}
+					throw new IllegalStateException(
+							"For " + javaClass + "multiple BuildingBlock Descriptors feel responsible: " + buildingBlockDescriptors.stream().map(Object::toString).collect(Collectors.joining(", ")));
+				}))
 				.map(buildingBlockDescriptor -> toBuildingBlock(javaClass, buildingBlockDescriptor))
 				.orElseGet(() -> toArbitraryClass(javaClass));
 	}
 
 	private ArchDocClass toBuildingBlock(final JavaClass javaClass, final BuildingBlockDescriptor buildingBlockDescriptor) {
-		return new BuildingBlock(javaClass, buildingBlockDescriptor.type);
+		return new BuildingBlock(javaClass, buildingBlockDescriptor.getType());
 	}
 
 	private ArchDocClass toArbitraryClass(final JavaClass javaClass) {
@@ -96,6 +122,6 @@ public class Application {
 	}
 
 	private Relationship toRelationship(final ArchDocClass sourceClass, final BuildingBlock targetBuildingBlock, final RelationshipDescriptor relationshipDescriptor) {
-		return new Relationship(sourceClass, targetBuildingBlock, relationshipDescriptor.getRole());
+		return new Relationship(sourceClass, targetBuildingBlock, relationshipDescriptor.getIdentifier());
 	}
 }
