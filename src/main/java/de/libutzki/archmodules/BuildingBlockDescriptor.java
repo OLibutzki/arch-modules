@@ -9,19 +9,19 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public final class BuildingBlockDescriptor {
 
-	public final String name;
+	public final BuildingBlockType type;
 	public final Predicate<? super JavaClass> selector;
 
-	static class BuildingBlockDescriptorWithName {
+	static class BuildingBlockDescriptorWithType {
 
-		final String name;
+		final BuildingBlockType type;
 
-		BuildingBlockDescriptorWithName(final String name) {
-			this.name = name;
+		BuildingBlockDescriptorWithType(final BuildingBlockType type) {
+			this.type = type;
 		}
 
 		public BuildingBlockDescriptor definedBy(final Predicate<? super JavaClass> selector) {
-			return new BuildingBlockDescriptor(name, selector);
+			return new BuildingBlockDescriptor(type, selector);
 		}
 	}
 

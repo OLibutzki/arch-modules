@@ -5,11 +5,11 @@ public final class ArchDocs {
 	private ArchDocs() {
 	}
 
-	static final BuildingBlockDescriptor.BuildingBlockDescriptorWithName buildingBlock(final String name) {
-		return new BuildingBlockDescriptor.BuildingBlockDescriptorWithName(name);
+	static final BuildingBlockDescriptor.BuildingBlockDescriptorWithType buildingBlock(final BuildingBlockType type) {
+		return new BuildingBlockDescriptor.BuildingBlockDescriptorWithType(type);
 	}
 
-	static final RelationshipDescriptor.RelationshipDescriptorWithName relationship(final String name) {
-		return new RelationshipDescriptor.RelationshipDescriptorWithName(name);
+	static final RelationshipDescriptor.RelationshipDescriptorWithRole relationship(final RelationshipRole role) {
+		return new RelationshipDescriptor.RelationshipDescriptorWithRole(role);
 	}
 }

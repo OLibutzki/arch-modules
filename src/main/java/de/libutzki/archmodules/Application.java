@@ -1,6 +1,10 @@
 package de.libutzki.archmodules;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -13,7 +17,7 @@ import lombok.Singular;
 
 public class Application {
 
-	public final Set<BuildingBlock> buildingBlocks;
+	public final Set<ArchDocClass> archDocClasses;
 	public final Set<Relationship> relationships;
 	public final ModuleAssignment moduleAssignment;
 
@@ -29,49 +33,66 @@ public class Application {
 			this.moduleAssignment = ModuleAssignment.NoOpModuleAssignment;
 		}
 
-		buildingBlocks = buildingBlockDescriptors
-				.stream()
-				.flatMap(buildingBlockDescriptor -> toBuildingBlocks(buildingBlockDescriptor, javaClasses))
-				.collect(Collectors.toSet());
+		final Map<JavaClass, ArchDocClass> archDocClassLookup = toArchDocClasses(javaClasses, buildingBlockDescriptors)
+				.collect(Collectors.toMap(ArchDocClass::getJavaClass, Function.identity()));
+
+		final Map<String, List<JavaClass>> moduleAssignmentMap = javaClasses.stream()
+				.filter(javaClass -> moduleAssignment.getModuleNameFor(javaClass).isPresent())
+				.collect(Collectors.groupingBy(javaClass -> moduleAssignment.getModuleNameFor(javaClass).get()));
+
+		moduleAssignmentMap.forEach((moduleName, moduleClasses) -> {
+			final Module module = new Module(moduleName);
+			moduleClasses
+					.stream()
+					.map(javaClass -> archDocClassLookup.get(javaClass))
+					.forEach(archDocClass -> archDocClass.assignModule(module));
+		});
+
+		archDocClasses = new HashSet<>(archDocClassLookup.values());
 
 		relationships = relationshipDescriptors
 				.stream()
-				.flatMap(buildingBlockDescriptor -> toRelationships(buildingBlockDescriptor))
+				.flatMap(buildingBlockDescriptor -> toRelationships(buildingBlockDescriptor, archDocClassLookup))
 				.collect(Collectors.toSet());
 
 	}
 
-	private Stream<BuildingBlock> toBuildingBlocks(final BuildingBlockDescriptor buildingBlockDescriptor, final JavaClasses javaClasses) {
+	private Stream<ArchDocClass> toArchDocClasses(final JavaClasses javaClasses, final Set<BuildingBlockDescriptor> buildingBlockDescriptors) {
 		return javaClasses
 				.stream()
-				.filter(buildingBlockDescriptor.selector)
-				.map(javaClass -> toBuildingBlock(javaClass, buildingBlockDescriptor));
+				.map(javaClass -> toArchDocClass(javaClass, buildingBlockDescriptors));
 	}
 
-	private BuildingBlock toBuildingBlock(final JavaClass javaClass, final BuildingBlockDescriptor buildingBlockDescriptor) {
-		return BuildingBlock.builder()
-				.name(buildingBlockDescriptor.name)
-				.module(moduleAssignment.getModuleNameFor(javaClass).orElse(null))
-				.javaClass(javaClass)
-				.build();
-	}
-
-	private Stream<Relationship> toRelationships(final RelationshipDescriptor relationshipDescriptor) {
-
-		return buildingBlocks
+	private ArchDocClass toArchDocClass(final JavaClass javaClass, final Set<BuildingBlockDescriptor> buildingBlockDescriptors) {
+		return buildingBlockDescriptors
 				.stream()
-				.filter(buildingBlock -> buildingBlock.getName().equals(relationshipDescriptor.getTargetBuildingBlockName()))
+				.filter(buildingBlockDescriptor -> buildingBlockDescriptor.selector.test(javaClass))
+				.findFirst()
+				.map(buildingBlockDescriptor -> toBuildingBlock(javaClass, buildingBlockDescriptor))
+				.orElseGet(() -> toArbitraryClass(javaClass));
+	}
+
+	private ArchDocClass toBuildingBlock(final JavaClass javaClass, final BuildingBlockDescriptor buildingBlockDescriptor) {
+		return new BuildingBlock(javaClass, buildingBlockDescriptor.type);
+	}
+
+	private ArchDocClass toArbitraryClass(final JavaClass javaClass) {
+		return new ArbitraryClass(javaClass);
+	}
+
+	private Stream<Relationship> toRelationships(final RelationshipDescriptor relationshipDescriptor, final Map<JavaClass, ArchDocClass> archDocClassLookup) {
+
+		return archDocClasses
+				.stream()
+				.filter(BuildingBlock.class::isInstance)
+				.map(BuildingBlock.class::cast)
+				.filter(buildingBlock -> buildingBlock.getType().equals(relationshipDescriptor.getTargetBuildingBlockType()))
 				.flatMap(buildingBlock -> relationshipDescriptor.getSourceSelector().apply(buildingBlock.getJavaClass())
-						.map(sourceJavaClass -> toRelationship(sourceJavaClass, buildingBlock, relationshipDescriptor)));
+						.map(sourceJavaClass -> toRelationship(archDocClassLookup.get(sourceJavaClass), buildingBlock, relationshipDescriptor)));
 
 	}
 
-	private Relationship toRelationship(final JavaClass sourceJavaClass, final BuildingBlock targetBuildingBlock, final RelationshipDescriptor relationshipDescriptor) {
-		return Relationship.builder()
-				.name(relationshipDescriptor.getName())
-				.source(sourceJavaClass)
-				.sourceModule(moduleAssignment.getModuleNameFor(sourceJavaClass).orElse(null))
-				.targetBuildingBlock(targetBuildingBlock)
-				.build();
+	private Relationship toRelationship(final ArchDocClass sourceClass, final BuildingBlock targetBuildingBlock, final RelationshipDescriptor relationshipDescriptor) {
+		return new Relationship(sourceClass, targetBuildingBlock, relationshipDescriptor.getRole());
 	}
 }

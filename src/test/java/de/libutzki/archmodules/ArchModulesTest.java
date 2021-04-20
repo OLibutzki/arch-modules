@@ -25,15 +25,16 @@ public class ArchModulesTest {
 
 		final JavaClasses javaClasses = new ClassFileImporter().importPackages("de.libutzki.archmodules.sample");
 
+		final BuildingBlockType event = BuildingBlockType.of("Event");
 		final Application application = Application.builder()
 				.javaClasses(javaClasses)
-				.buildingBlockDescriptor(buildingBlock("Event").definedBy(this::event))
-				.relationshipDescriptor(relationship("handles").to("Event").from(this::eventHandlers))
-				.relationshipDescriptor(relationship("emits").to("Event").from(this::eventEmitters))
+				.buildingBlockDescriptor(buildingBlock(event).definedBy(this::event))
+				.relationshipDescriptor(relationship(RelationshipRole.of("handles")).to(event).from(this::eventHandlers))
+				.relationshipDescriptor(relationship(RelationshipRole.of("emits")).to(event).from(this::eventEmitters))
 				.moduleAssignment(moduleAssignment(javaClasses))
 				.build();
 
-		application.buildingBlocks.forEach(System.out::println);
+		application.archDocClasses.stream().filter(BuildingBlock.class::isInstance).forEach(System.out::println);
 		application.relationships.forEach(System.out::println);
 	}
 

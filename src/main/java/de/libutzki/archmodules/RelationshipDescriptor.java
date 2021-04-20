@@ -11,28 +11,28 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public class RelationshipDescriptor {
-	private final String name;
-	private final String targetBuildingBlockName;
+	private final RelationshipRole role;
+	private final BuildingBlockType targetBuildingBlockType;
 	private final Function<? super JavaClass, Stream<JavaClass>> sourceSelector;
 
 	@RequiredArgsConstructor
-	static class RelationshipDescriptorWithName {
+	static class RelationshipDescriptorWithRole {
 
-		private final String name;
+		private final RelationshipRole role;
 
-		public RelationshipDescriptorWithTarget to(final String targetBuildingBlockName) {
-			return new RelationshipDescriptorWithTarget(name, targetBuildingBlockName);
+		public RelationshipDescriptorWithTarget to(final BuildingBlockType targetBuildingBlockType) {
+			return new RelationshipDescriptorWithTarget(role, targetBuildingBlockType);
 		}
 	}
 
 	@RequiredArgsConstructor
 	static class RelationshipDescriptorWithTarget {
 
-		private final String name;
-		private final String targetBuildingBlockName;
+		private final RelationshipRole role;
+		private final BuildingBlockType targetBuildingBlockType;
 
 		public RelationshipDescriptor from(final Function<? super JavaClass, Stream<JavaClass>> sourceSelector) {
-			return new RelationshipDescriptor(name, targetBuildingBlockName, sourceSelector);
+			return new RelationshipDescriptor(role, targetBuildingBlockType, sourceSelector);
 		}
 
 	}
