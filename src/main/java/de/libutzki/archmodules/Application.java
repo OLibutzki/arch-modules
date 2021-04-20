@@ -79,6 +79,20 @@ public class Application {
 
 	}
 
+	public Set<BuildingBlock> buildingBlocksOf(final BuildingBlockType buildingBlockType) {
+		return buildingBlocks
+				.stream()
+				.filter(buildingBlock -> buildingBlock.getType().equals(buildingBlockType))
+				.collect(Collectors.toSet());
+	}
+
+	public Set<Relationship> relationshipsOf(final RelationshipIdentifier relationshipIdentifier) {
+		return relationships
+				.stream()
+				.filter(relationship -> relationship.getIdentifier().equals(relationshipIdentifier))
+				.collect(Collectors.toSet());
+	}
+
 	private Stream<ArchDocClass> toArchDocClasses(final JavaClasses javaClasses, final Set<BuildingBlockDescriptor> buildingBlockDescriptors) {
 		return javaClasses
 				.stream()
@@ -124,4 +138,5 @@ public class Application {
 	private Relationship toRelationship(final ArchDocClass sourceClass, final BuildingBlock targetBuildingBlock, final RelationshipDescriptor relationshipDescriptor) {
 		return new Relationship(sourceClass, targetBuildingBlock, relationshipDescriptor.getIdentifier());
 	}
+
 }

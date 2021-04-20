@@ -2,6 +2,7 @@ package de.libutzki.archmodules;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 
@@ -27,6 +28,21 @@ public final class Module {
 
 	public String getName() {
 		return name;
+	}
+
+	public Set<BuildingBlock> buildingBlocks() {
+		return classes
+				.stream()
+				.filter(BuildingBlock.class::isInstance)
+				.map(BuildingBlock.class::cast)
+				.collect(Collectors.toSet());
+	}
+
+	public Set<BuildingBlock> buildingBlocksOf(final BuildingBlockType buildingBlockType) {
+		return buildingBlocks()
+				.stream()
+				.filter(buildingBlock -> buildingBlock.getType().equals(buildingBlockType))
+				.collect(Collectors.toSet());
 	}
 
 	@Override
