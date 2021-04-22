@@ -1,9 +1,9 @@
 package de.libutzki.archmodules;
 
-import static com.tngtech.archunit.core.domain.properties.CanBeAnnotated.Predicates.annotatedWith;
 import static de.libutzki.archmodules.ArchDocs.buildingBlock;
 import static de.libutzki.archmodules.ArchDocs.relationship;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -31,20 +31,19 @@ public class ArchModulesTest {
 				.buildingBlockDescriptor(buildingBlock(event).definedBy(this::event))
 				.relationshipDescriptor(relationship(RelationshipIdentifier.of("handles", event)).from(this::eventHandlers))
 				.relationshipDescriptor(relationship(RelationshipIdentifier.of("emits", event)).from(this::eventEmitters))
-				.moduleAssignment(moduleAssignment(javaClasses))
+				.moduleDescriptor(ArchDocs.modulesFrom(this::module).containing(this::containing))
 				.build();
 
 		application.buildingBlocks.forEach(System.out::println);
 		application.relationships.forEach(System.out::println);
 	}
 
-	private ModuleAssignment moduleAssignment(final JavaClasses javaClasses) {
-		return javaClass -> javaClasses.that(annotatedWith(Module.class))
-				.stream()
-				.filter(moduleDescriptor -> moduleDescriptor.getPackage().getAllClasses().contains(javaClass))
-				.findFirst()
-				.map(moduleDescriptor -> moduleDescriptor.getAnnotationOfType(Module.class).value());
+	private Stream<JavaClass> containing(final JavaClass javaClass) {
+		return javaClass.getPackage().getAllClasses().stream();
+	}
 
+	private Optional<String> module(final JavaClass javaClass) {
+		return javaClass.isAnnotatedWith(Module.class) ? Optional.of(javaClass.getAnnotationOfType(Module.class).value()) : Optional.empty();
 	}
 
 	private boolean event(final JavaClass javaClass) {

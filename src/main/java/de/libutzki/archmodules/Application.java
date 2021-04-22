@@ -1,10 +1,10 @@
 package de.libutzki.archmodules;
 
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -23,19 +23,14 @@ public class Application {
 
 	public final Set<BuildingBlock> buildingBlocks;
 	public final Set<Relationship> relationships;
-	public final ModuleAssignment moduleAssignment;
+	public final Set<Module> modules;
 
 	@Builder
 	private Application(
 			final @NonNull JavaClasses javaClasses,
 			final @Singular Set<BuildingBlockDescriptor> buildingBlockDescriptors,
 			final @Singular Set<RelationshipDescriptor> relationshipDescriptors,
-			final ModuleAssignment moduleAssignment) {
-		if (moduleAssignment != null) {
-			this.moduleAssignment = moduleAssignment;
-		} else {
-			this.moduleAssignment = ModuleAssignment.NoOpModuleAssignment;
-		}
+			final ModuleDescriptor moduleDescriptor) {
 
 		final Set<BuildingBlockType> duplicateBuildingBlockTypes = buildingBlockDescriptors
 				.stream()
@@ -54,17 +49,23 @@ public class Application {
 		final Map<JavaClass, ArchDocClass> archDocClassLookup = toArchDocClasses(javaClasses, buildingBlockDescriptors)
 				.collect(Collectors.toMap(ArchDocClass::getJavaClass, Function.identity()));
 
-		final Map<String, List<JavaClass>> moduleAssignmentMap = javaClasses.stream()
-				.filter(javaClass -> moduleAssignment.getModuleNameFor(javaClass).isPresent())
-				.collect(Collectors.groupingBy(javaClass -> moduleAssignment.getModuleNameFor(javaClass).get()));
-
-		moduleAssignmentMap.forEach((moduleName, moduleClasses) -> {
-			final Module module = new Module(moduleName);
-			moduleClasses
+		if (moduleDescriptor != null) {
+			modules = javaClasses
 					.stream()
-					.map(javaClass -> archDocClassLookup.get(javaClass))
-					.forEach(archDocClass -> archDocClass.assignModule(module));
-		});
+					.map(javaClass -> moduleDescriptor.moduleName(javaClass)
+							.map(moduleName -> {
+								final Module module = new Module(moduleName);
+								moduleDescriptor.containedClasses(javaClass)
+										.map(archDocClassLookup::get)
+										.forEach(module::assignClass);
+								return module;
+							}))
+					.filter(Optional::isPresent)
+					.map(Optional::get)
+					.collect(toSet());
+		} else {
+			modules = emptySet();
+		}
 
 		buildingBlocks = archDocClassLookup.values()
 				.stream()
@@ -83,14 +84,14 @@ public class Application {
 		return buildingBlocks
 				.stream()
 				.filter(buildingBlock -> buildingBlock.getType().equals(buildingBlockType))
-				.collect(Collectors.toSet());
+				.collect(toSet());
 	}
 
 	public Set<Relationship> relationshipsOf(final RelationshipIdentifier relationshipIdentifier) {
 		return relationships
 				.stream()
 				.filter(relationship -> relationship.getIdentifier().equals(relationshipIdentifier))
-				.collect(Collectors.toSet());
+				.collect(toSet());
 	}
 
 	private Stream<ArchDocClass> toArchDocClasses(final JavaClasses javaClasses, final Set<BuildingBlockDescriptor> buildingBlockDescriptors) {
