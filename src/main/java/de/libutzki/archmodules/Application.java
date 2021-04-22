@@ -34,7 +34,7 @@ public class Application {
 
 		final Set<BuildingBlockType> duplicateBuildingBlockTypes = buildingBlockDescriptors
 				.stream()
-				.collect(Collectors.groupingBy(BuildingBlockDescriptor::getType, Collectors.counting()))
+				.collect(Collectors.groupingBy(BuildingBlockDescriptor::type, Collectors.counting()))
 				.entrySet()
 				.stream()
 				.filter(count -> count.getValue() > 1)
@@ -103,13 +103,13 @@ public class Application {
 	private ArchDocClass toArchDocClass(final JavaClass javaClass, final Set<BuildingBlockDescriptor> buildingBlockDescriptors) {
 		return buildingBlockDescriptors
 				.stream()
-				.filter(buildingBlockDescriptor -> buildingBlockDescriptor.getSelector().test(javaClass))
+				.filter(buildingBlockDescriptor -> buildingBlockDescriptor.isBuildingBlock(javaClass))
 				.collect(collectingAndThen(toList(), descriptors -> {
 					if (descriptors.size() == 1) {
 						return Optional.of(descriptors.get(0));
 					}
 					if (descriptors.isEmpty()) {
-						return Optional.<BuildingBlockDescriptor>empty();
+						return Optional.<DeclarativeBuildingBlockDescriptor>empty();
 					}
 					throw new IllegalStateException(
 							"For " + javaClass + "multiple BuildingBlock Descriptors feel responsible: " + buildingBlockDescriptors.stream().map(Object::toString).collect(Collectors.joining(", ")));
@@ -119,7 +119,7 @@ public class Application {
 	}
 
 	private ArchDocClass toBuildingBlock(final JavaClass javaClass, final BuildingBlockDescriptor buildingBlockDescriptor) {
-		return new BuildingBlock(javaClass, buildingBlockDescriptor.getType());
+		return new BuildingBlock(javaClass, buildingBlockDescriptor.type());
 	}
 
 	private ArchDocClass toArbitraryClass(final JavaClass javaClass) {

@@ -10,8 +10,8 @@ public final class ArchDocs {
 	private ArchDocs() {
 	}
 
-	static final BuildingBlockDescriptor.BuildingBlockDescriptorWithType buildingBlock(final BuildingBlockType type) {
-		return new BuildingBlockDescriptor.BuildingBlockDescriptorWithType(type);
+	static final DeclarativeBuildingBlockDescriptor.DeclarativeBuildingBlockDescriptorWithType buildingBlock(final BuildingBlockType type) {
+		return new DeclarativeBuildingBlockDescriptor.DeclarativeBuildingBlockDescriptorWithType(type);
 	}
 
 	static final RelationshipDescriptor.RelationshipDescriptorWithIdentifier relationship(final RelationshipIdentifier identifier) {
