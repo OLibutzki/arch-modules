@@ -75,7 +75,7 @@ public class Application {
 
 		relationships = relationshipDescriptors
 				.stream()
-				.flatMap(buildingBlockDescriptor -> toRelationships(buildingBlockDescriptor, archDocClassLookup))
+				.flatMap(relationshipDescriptor -> toRelationships(relationshipDescriptor, archDocClassLookup))
 				.collect(toSet());
 
 	}
@@ -130,14 +130,14 @@ public class Application {
 
 		return buildingBlocks
 				.stream()
-				.filter(buildingBlock -> buildingBlock.getType().equals(relationshipDescriptor.getTargetBuildingBlockType()))
-				.flatMap(buildingBlock -> relationshipDescriptor.getSourceSelector().apply(buildingBlock.getJavaClass())
+				.filter(buildingBlock -> buildingBlock.getType().equals(relationshipDescriptor.targetBuildingBlockType()))
+				.flatMap(buildingBlock -> relationshipDescriptor.sources(buildingBlock.getJavaClass())
 						.map(sourceJavaClass -> toRelationship(archDocClassLookup.get(sourceJavaClass), buildingBlock, relationshipDescriptor)));
 
 	}
 
 	private Relationship toRelationship(final ArchDocClass sourceClass, final BuildingBlock targetBuildingBlock, final RelationshipDescriptor relationshipDescriptor) {
-		return new Relationship(sourceClass, targetBuildingBlock, relationshipDescriptor.getIdentifier());
+		return new Relationship(sourceClass, targetBuildingBlock, relationshipDescriptor.identifier());
 	}
 
 }

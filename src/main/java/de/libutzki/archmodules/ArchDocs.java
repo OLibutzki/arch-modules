@@ -14,8 +14,8 @@ public final class ArchDocs {
 		return new DeclarativeBuildingBlockDescriptor.DeclarativeBuildingBlockDescriptorWithType(type);
 	}
 
-	static final RelationshipDescriptor.RelationshipDescriptorWithIdentifier relationship(final RelationshipIdentifier identifier) {
-		return new RelationshipDescriptor.RelationshipDescriptorWithIdentifier(identifier);
+	static final DeclarativeRelationshipDescriptor.DeclarativeRelationshipDescriptorWithIdentifier relationship(final RelationshipIdentifier identifier) {
+		return new DeclarativeRelationshipDescriptor.DeclarativeRelationshipDescriptorWithIdentifier(identifier);
 	}
 
 	static final DeclarativeModuleDescriptor.DeclarativeModuleDescriptorWithSelector modulesFrom(final Function<? super JavaClass, Optional<String>> selector) {
